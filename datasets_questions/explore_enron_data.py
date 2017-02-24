@@ -16,7 +16,21 @@
 """
 
 import pickle
+import numpy as np
 
 enron_data = pickle.load(open("../final_project/final_project_dataset.pkl", "r"))
 
+# print enron_data["SKILLING JEFFREY K"]["total_payments"]
+# print enron_data["FASTOW ANDREW S"]["total_payments"]
+# print enron_data["LAY KENNETH L"]["total_payments"]
 
+salary_num = 0
+address_num = 0
+for data in enron_data:
+    if np.isnan(float(enron_data[data]["total_payments"])):
+        salary_num += 1
+    address_num += 1
+
+print enron_data["LAY KENNETH L"]
+
+print salary_num, address_num
