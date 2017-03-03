@@ -14,7 +14,17 @@ def outlierCleaner(predictions, ages, net_worths):
     cleaned_data = []
 
     ### your code goes here
+    origin_data = []
+    for idx in range(len(predictions)):
+        data = (predictions[idx] - net_worths[idx], ages[idx], net_worths[idx])
+        origin_data.append(data)
 
-    
+    sorted(origin_data, cmp=lambda x, y: cmp(abs(x[0]), abs(y[0])))
+
+    for idx in range(len(origin_data)):
+        if idx <= 0.9 * len(origin_data):
+            data = origin_data[idx]
+            cleaned_data.append(data)
+
     return cleaned_data
 

@@ -22,7 +22,7 @@ data_dict = pickle.load(open("../final_project/final_project_dataset.pkl", "r") 
 features_list = ["poi", "salary"]
 
 data = featureFormat(data_dict, features_list)
-labels, features = targetFeatureSplit(data)
+labels, features = targetFeatureSplit + data
 
 
 
