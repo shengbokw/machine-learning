@@ -146,6 +146,87 @@ labels, features = targetFeatureSplit(data)
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
+##########################Task 4: Using algorithm########################
+# 3.8 scale features via min-max
+from sklearn import preprocessing
+scaler = preprocessing.MinMaxScaler()
+features = scaler.fit_transform(features)
+
+###3.1  Logistic Regression Classifier
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+l_clf = Pipeline(steps=[
+        ('scaler', StandardScaler()),
+        ('classifier', LogisticRegression(tol = 0.001, C = 10**-8, penalty = 'l2', random_state = 42))])
+
+###3.2  K-means Clustering
+from sklearn.cluster import KMeans
+k_clf = KMeans(n_clusters=2, tol=0.001)
+
+
+###3.3 Support Vector Machine Classifier
+from sklearn.svm import SVC
+s_clf = SVC(kernel='rbf', C=1000,gamma = 0.0001,random_state = 42, class_weight = 'auto')
+
+###3.4 Random Forest
+from sklearn.ensemble import RandomForestClassifier
+rf_clf = RandomForestClassifier(max_depth = 5,max_features = 'sqrt',n_estimators = 10, random_state = 42)
+
+
+###3.5 evaluate function
+from sklearn.cross_validation import StratifiedShuffleSplit
+from sklearn import cross_validation
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from numpy import mean
+
+def evaluate_clf(clf, features, labels, num_iters=1000, test_size=0.3):
+    print clf
+    accuracy = []
+    precision = []
+    recall = []
+    first = True
+    for trial in range(num_iters):
+        features_train, features_test, labels_train, labels_test =\
+            cross_validation.train_test_split(features, labels, test_size=test_size)
+        clf.fit(features_train, labels_train)
+        predictions = clf.predict(features_test)
+        accuracy.append(accuracy_score(labels_test, predictions))
+        precision.append(precision_score(labels_test, predictions))
+        recall.append(recall_score(labels_test, predictions))
+        if trial % 10 == 0:
+            if first:
+                sys.stdout.write('\nProcessing')
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            first = False
+
+    print "done.\n"
+    print "precision: {}".format(mean(precision))
+    print "recall:    {}".format(mean(recall))
+    return mean(precision), mean(recall)
+
+
+### 3.6 Evaluate all functions
+evaluate_clf(l_clf, features, labels)
+evaluate_clf(k_clf, features, labels)
+evaluate_clf(s_clf, features, labels)
+evaluate_clf(rf_clf, features, labels)
+
+### Select Logistic Regression as final algorithm
+clf = l_clf
+
+
+# dump your classifier, dataset and features_list so
+# anyone can run/check your results
+pickle.dump(clf, open("../data/my_classifier.pkl", "w"))
+pickle.dump(my_dataset, open("../data/my_dataset.pkl", "w"))
+pickle.dump(my_feature_list, open("../data/my_feature_list.pkl", "w"))
+
+
+
 # Provided to give you a starting point. Try a variety of classifiers.
 from sklearn.naive_bayes import GaussianNB
 clf = GaussianNB()
