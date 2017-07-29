@@ -2,27 +2,142 @@
 
 import sys
 import pickle
+import pandas as pd
+import numpy as np
 sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
+from sklearn.feature_selection import SelectKBest
+
+def remove_outliers(dictionary, outliers):
+    """ this function removes a list of keys from a dictionary object """
+    for outlier in outliers:
+        dictionary.pop(outlier, 0)
+
+def get_nan_counts(dictionary):
+    '''
+    converts 'NaN' string to np.nan returning a pandas
+    dataframe of each feature and it's corresponding
+    percent null values (nan)
+    '''
+    my_df = pd.DataFrame(dictionary).transpose()
+    nan_counts_dict = {}
+    for column in my_df.columns:
+        my_df[column] = my_df[column].replace('NaN', np.nan)
+        nan_counts = my_df[column].isnull().sum()
+        nan_counts_dict[column] = round(float(nan_counts) / float(len(my_df[column])) * 100, 1)
+    df = pd.DataFrame(nan_counts_dict, index=['percent_nan']).transpose()
+    df.reset_index(level=0, inplace=True)
+    df = df.rename(columns={'index': 'feature'})
+    return df
+
+def get_k_best(dictionary, features_list, k):
+    """ runs scikit-learn's SelectKBest feature selection returning:
+    {feature:score}
+    """
+    data = featureFormat(dictionary, features_list)
+    labels, features = targetFeatureSplit(data)
+
+    k_best = SelectKBest(k=k)
+    k_best.fit(features, labels)
+    scores = k_best.scores_
+    pairs = zip(features_list[1:], scores)
+    # combined scores and features into a pandas dataframe then sort
+    k_best_features = pd.DataFrame(pairs, columns=['feature', 'score'])
+    k_best_features = k_best_features.sort('score', ascending=False)
+
+    # merge with null counts
+    df_nan_counts = get_nan_counts(dictionary)
+    k_best_features = pd.merge(k_best_features, df_nan_counts, on='feature')
+
+    # eliminate infinite values
+    k_best_features = k_best_features[np.isinf(k_best_features.score) == False]
+    print 'Feature Selection by k_best_features\n'
+    print "{0} best features in descending order: {1}\n".format(k, k_best_features.feature.values[:k])
+    print '{0}\n'.format(k_best_features[:k])
+
+    return k_best_features[:k]
+
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary'] # You will need to use more features
+target_label = 'poi'
+
+email_features_list = [
+    'from_messages',
+    'from_poi_to_this_person',
+    'from_this_person_to_poi',
+    'shared_receipt_with_poi',
+    'to_messages',
+    ]
+
+financial_features_list = [
+    'bonus',
+    'deferral_payments',
+    'deferred_income',
+    'director_fees',
+    'exercised_stock_options',
+    'expenses',
+    'loan_advances',
+    'long_term_incentive',
+    'other',
+    'restricted_stock',
+    'restricted_stock_deferred',
+    'salary',
+    'total_payments',
+    'total_stock_value',
+    ]
+
+features_list = [target_label] + financial_features_list + email_features_list
+
+
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
+
 ### Task 2: Remove outliers
+
+outliers = ['TOTAL','THE TRAVEL AGENCY IN THE PARK','LOCKHART EUGENE E']
+
+remove_outliers(data_dict, outliers)
+
 ### Task 3: Create new feature(s)
+def compute_fraction(poi_messages, all_messages):
+    """ return fraction of messages from/to that person to/from POI"""
+    if poi_messages == 'NaN' or all_messages == 'NaN':
+        return 0.
+    fraction = poi_messages / all_messages
+    return fraction
+
+
+for name in data_dict:
+    data_point = data_dict[name]
+    from_poi_to_this_person = data_point["from_poi_to_this_person"]
+    to_messages = data_point["to_messages"]
+    fraction_from_poi = compute_fraction(from_poi_to_this_person, to_messages)
+    data_point["fraction_from_poi"] = fraction_from_poi
+    from_this_person_to_poi = data_point["from_this_person_to_poi"]
+    from_messages = data_point["from_messages"]
+    fraction_to_poi = compute_fraction(from_this_person_to_poi, from_messages)
+    data_point["fraction_to_poi"] = fraction_to_poi
+
+my_feature_list = features_list+['to_messages', 'from_poi_to_this_person', 'from_messages', 'from_this_person_to_poi',
+                                 'shared_receipt_with_poi', 'fraction_to_poi']
+
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
+best_features = get_k_best(my_dataset, my_feature_list, 10)
+
+final_feature_list = [target_label] + best_features.keys()
+
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True)
+data = featureFormat(my_dataset, final_feature_list, sort_keys = True)
+
 labels, features = targetFeatureSplit(data)
 
 ### Task 4: Try a varity of classifiers
