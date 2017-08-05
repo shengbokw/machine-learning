@@ -125,15 +125,20 @@ for name in data_dict:
     fraction_to_poi = compute_fraction(from_this_person_to_poi, from_messages)
     data_point["fraction_to_poi"] = fraction_to_poi
 
-my_feature_list = features_list+['to_messages', 'from_poi_to_this_person', 'from_messages', 'from_this_person_to_poi',
-                                 'shared_receipt_with_poi', 'fraction_to_poi']
+my_feature_list = features_list + ['fraction_from_poi', 'fraction_to_poi']
 
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
 best_features = get_k_best(my_dataset, my_feature_list, 10)
 
-final_feature_list = [target_label] + best_features.keys()
+### get the 10 best features are ['exercised_stock_options' 'total_stock_value' 'bonus' 'salary'
+### 'deferred_income' 'long_term_incentive' 'restricted_stock'
+### 'total_payments' 'shared_receipt_with_poi' 'loan_advances']
+
+final_feature_list = [target_label] + ['exercised_stock_options', 'total_stock_value', 'bonus', 'salary',
+                                         'deferred_income', 'long_term_incentive', 'restricted_stock',
+                                         'total_payments', 'shared_receipt_with_poi', 'loan_advances']
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, final_feature_list, sort_keys = True)
@@ -147,12 +152,16 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 ##########################Task 4: Using algorithm########################
-# 3.8 scale features via min-max
+# 4.0 scale features via min-max
 from sklearn import preprocessing
 scaler = preprocessing.MinMaxScaler()
 features = scaler.fit_transform(features)
 
-###3.1  Logistic Regression Classifier
+# Provided to give you a starting point. Try a variety of classifiers.
+from sklearn.naive_bayes import GaussianNB
+g_clf = GaussianNB()
+
+###4.1  Logistic Regression Classifier
 from sklearn.linear_model import LogisticRegression
 
 from sklearn.pipeline import Pipeline
@@ -162,21 +171,27 @@ l_clf = Pipeline(steps=[
         ('scaler', StandardScaler()),
         ('classifier', LogisticRegression(tol = 0.001, C = 10**-8, penalty = 'l2', random_state = 42))])
 
-###3.2  K-means Clustering
+###4.2  K-means Clustering
 from sklearn.cluster import KMeans
 k_clf = KMeans(n_clusters=2, tol=0.001)
 
 
-###3.3 Support Vector Machine Classifier
+###4.3 Support Vector Machine Classifier
 from sklearn.svm import SVC
 s_clf = SVC(kernel='rbf', C=1000,gamma = 0.0001,random_state = 42, class_weight = 'auto')
 
-###3.4 Random Forest
+###4.4 Random Forest
 from sklearn.ensemble import RandomForestClassifier
 rf_clf = RandomForestClassifier(max_depth = 5,max_features = 'sqrt',n_estimators = 10, random_state = 42)
 
 
-###3.5 evaluate function
+### Task 5: Tune your classifier to achieve better than .3 precision and recall 
+### using our testing script. Check the tester.py script in the final project
+### folder for details on the evaluation method, especially the test_classifier
+### function. Because of the small size of the dataset, the script uses
+### stratified shuffle split cross validation. For more info: 
+### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
+###5.1 evaluate function
 from sklearn.cross_validation import StratifiedShuffleSplit
 from sklearn import cross_validation
 from sklearn.metrics import accuracy_score, precision_score, recall_score
@@ -209,7 +224,8 @@ def evaluate_clf(clf, features, labels, num_iters=1000, test_size=0.3):
     return mean(precision), mean(recall)
 
 
-### 3.6 Evaluate all functions
+### 5.2 Evaluate all functions
+evaluate_clf(g_clf, features, labels)
 evaluate_clf(l_clf, features, labels)
 evaluate_clf(k_clf, features, labels)
 evaluate_clf(s_clf, features, labels)
@@ -219,33 +235,13 @@ evaluate_clf(rf_clf, features, labels)
 clf = l_clf
 
 
-# dump your classifier, dataset and features_list so
-# anyone can run/check your results
-pickle.dump(clf, open("../data/my_classifier.pkl", "w"))
-pickle.dump(my_dataset, open("../data/my_dataset.pkl", "w"))
-pickle.dump(my_feature_list, open("../data/my_feature_list.pkl", "w"))
-
-
-
-# Provided to give you a starting point. Try a variety of classifiers.
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
-
-### Task 5: Tune your classifier to achieve better than .3 precision and recall 
-### using our testing script. Check the tester.py script in the final project
-### folder for details on the evaluation method, especially the test_classifier
-### function. Because of the small size of the dataset, the script uses
-### stratified shuffle split cross validation. For more info: 
-### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
-
-# Example starting point. Try investigating other evaluation techniques!
-from sklearn.cross_validation import train_test_split
-features_train, features_test, labels_train, labels_test = \
-    train_test_split(features, labels, test_size=0.3, random_state=42)
-
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
+# dump your classifier, dataset and features_list so
+# anyone can run/check your results
 
-dump_classifier_and_data(clf, my_dataset, features_list)
+pickle.dump(clf, open("./my_classifier.pkl", "w"))
+pickle.dump(my_dataset, open("./my_dataset.pkl", "w"))
+pickle.dump(my_feature_list, open("./my_feature_list.pkl", "w"))
