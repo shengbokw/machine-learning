@@ -1,0 +1,305 @@
+<!DOCTYPE html><html><head><title>安然提交开放式问题</title><meta charset='utf-8'><link href='https://d31qtcb7c58z3n.cloudfront.net/res-min/themes/marxico.css' rel='stylesheet'><style></style></head><body><div id='preview-contents' class='note-content'>
+                        
+                    
+
+
+
+<h2 id="安然提交开放式问题">安然提交开放式问题</h2>
+
+<p></p>
+
+
+
+<h3 id="qa">Q&amp;A:</h3>
+
+<p><strong>Q1: <em>向我们总结此项目的目标以及机器学习对于实现此目标有何帮助。作为答案的部分，提供一些数据集背景信息以及这些信息如何用于回答项目问题。你在获得数据时它们是否包含任何异常值，你是如何进行处理的？【相关标准项：“数据探索”，“异常值调查”】</em></strong></p>
+
+<p>该项目的目标是使用安然财务造假一案中的邮件数据来设计预测模型来找出作案嫌疑人(POI)，由于该案已经结束，犯罪分子也已经被捕获，所以这份数据就可以很好的被作为研究案例，从而设计出好的预测模型运用到潜在犯罪公司的识别中。</p>
+
+<p>项目中提供的数据集包含email数据和financial数据，一共有146条可用数据，每条数据代表一个人，其中每个人有21个特征值来表示，其中有35个被标记为POI的人，但在最终的项目数据中146个人被标记为POI的人只有18人，通过<code>./enron61702insiderpay</code>，可以发现数据集中各个特征值的缺失情况，如下：</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">特征</th>
+  <th align="center">缺失个数</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">Loan advances</td>
+  <td align="center">142</td>
+</tr>
+<tr>
+  <td align="left">Director fees</td>
+  <td align="center">129</td>
+</tr>
+<tr>
+  <td align="left">Restricted stock deferred</td>
+  <td align="center">128</td>
+</tr>
+<tr>
+  <td align="left">Deferred payment</td>
+  <td align="center">107</td>
+</tr>
+<tr>
+  <td align="left">Deferred income</td>
+  <td align="center">97</td>
+</tr>
+<tr>
+  <td align="left">Long term incentive</td>
+  <td align="center">80</td>
+</tr>
+<tr>
+  <td align="left">Bonus</td>
+  <td align="center">64</td>
+</tr>
+<tr>
+  <td align="left">Emails sent also to POI</td>
+  <td align="center">60</td>
+</tr>
+<tr>
+  <td align="left">Emails sent</td>
+  <td align="center">60</td>
+</tr>
+<tr>
+  <td align="left">Emails received</td>
+  <td align="center">60</td>
+</tr>
+<tr>
+  <td align="left">Emails from POI</td>
+  <td align="center">60</td>
+</tr>
+<tr>
+  <td align="left">Emails to POI</td>
+  <td align="center">60</td>
+</tr>
+<tr>
+  <td align="left">Other</td>
+  <td align="center">53</td>
+</tr>
+<tr>
+  <td align="left">Expenses</td>
+  <td align="center">51</td>
+</tr>
+<tr>
+  <td align="left">Salary</td>
+  <td align="center">51</td>
+</tr>
+<tr>
+  <td align="left">Excersised stock option</td>
+  <td align="center">44</td>
+</tr>
+<tr>
+  <td align="left">Restricted stock</td>
+  <td align="center">36</td>
+</tr>
+<tr>
+  <td align="left">Email address</td>
+  <td align="center">35</td>
+</tr>
+<tr>
+  <td align="left">Total payment</td>
+  <td align="center">21</td>
+</tr>
+<tr>
+  <td align="left">Total stock value</td>
+  <td align="center">20</td>
+</tr>
+</tbody></table>
+
+
+<p>因为在大部分情况下，最好的特征都来自于我们的直觉，所以对于安然欺诈案稍微交代背景也是很有必要的。安然公司曾经是世界上最大的能源、商品和服务公司之一，名列《财富》杂志“美国500强”的第七名，然而，2001年12月2日，安然公司突然向纽约破产法院申请破产保护，该案成为美国历史上企业第二大破产案。详情可点击<a href="http://www.360doc.com/content/11/0531/19/2471108_120782588.shtml" target="_blank">安然事件及其启示</a>。</p>
+
+<p>本项目将主要使用<code>scikit-learn</code> 软件包及一些机器学习的方法来预测嫌疑人(POI)，期间会使用到每一个用户特征中的金融及邮件信息。通过数据集探索，将删除以下异常值:</p>
+
+<ul><li><code>TOTAL</code>: 由于该数据其实是每一个financial数据的汇总，所以是异常值，需要去除。</li>
+<li><code>THE TRAVEL AGENCY IN THE PARK</code>: 从该记录的命名来看完全属于异常值，去除掉。</li>
+<li><code>LOCKHART EUGENE E</code>: 这条记录没有任何特征信息</li>
+</ul>
+
+<p><strong>Q2: <em>你最终在你的 POI 标识符中使用了什么特征，你使用了什么筛选过程来挑选它们？你是否需要进行任何缩放？为什么？作为任务的一部分，你应该尝试设计自己的特征，而非使用数据集中现成的——解释你尝试创建的特征及其基本原理。（你不一定要在最后的分析中使用它，而只设计并测试它）。在你的特征选择步骤，如果你使用了算法（如决策树），请也给出所使用特征的特征重要性；如果你使用了自动特征选择函数（如 SelectBest），请报告特征得分及你所选的参数值的原因。【相关标准项：“创建新特征”、“适当缩放特征”、“智能选择功能”】</em></strong></p>
+
+<p>在最终的POI标识识别时，使用了如下表所示的10个特征，是通过 scikit-learn的 <code>SelectKBest</code> 选出的最影响结果的10个特征。在备选的19个特征中，还通过比例缩放设计了两个特征<code>fraction_from_poi</code> 和 <code>fraction_to_poi</code>，分别代表来自poi的邮件占所有收到邮件的占比，和发给poi的邮件占所有发送邮件的占比。虽然<code>loan_advances</code>的缺失值非常多，但也是最重要的10个特征之一。</p>
+
+<table>
+<thead>
+<tr>
+  <th align="center">Selected Features</th>
+  <th align="center">Score</th>
+  <th align="center">Percent of NAN</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="center">exercised_stock_options</td>
+  <td align="center">24.815080</td>
+  <td align="center">29.4</td>
+</tr>
+<tr>
+  <td align="center">total_stock_value</td>
+  <td align="center">24.182899</td>
+  <td align="center">12.6</td>
+</tr>
+<tr>
+  <td align="center">bonus</td>
+  <td align="center">20.792252</td>
+  <td align="center">43.4</td>
+</tr>
+<tr>
+  <td align="center">salary</td>
+  <td align="center">18.289684</td>
+  <td align="center">34.3</td>
+</tr>
+<tr>
+  <td align="center">deferred_income</td>
+  <td align="center">11.458477</td>
+  <td align="center">66.4</td>
+</tr>
+<tr>
+  <td align="center">long_term_incentive</td>
+  <td align="center">9.922186</td>
+  <td align="center">54.5</td>
+</tr>
+<tr>
+  <td align="center">restricted_stock</td>
+  <td align="center">9.212811</td>
+  <td align="center">23.8</td>
+</tr>
+<tr>
+  <td align="center">total_payments</td>
+  <td align="center">8.772778</td>
+  <td align="center">14.0</td>
+</tr>
+<tr>
+  <td align="center">shared_receipt_with_poi</td>
+  <td align="center">8.589421</td>
+  <td align="center">39.9</td>
+</tr>
+<tr>
+  <td align="center">loan_advances</td>
+  <td align="center">7.184056</td>
+  <td align="center">97.9</td>
+</tr>
+</tbody></table>
+
+
+<p><strong>Q3: <em>你最终使用了什么算法？你还尝试了其他什么算法？不同算法之间的模型性能有何差异？【相关标准项：“选择算法”】</em></strong></p>
+
+<p>我首先尝试了一下GaussianNB，因为在模板中有提供该方法，得到一个准确率和召回率，然后我就以此为基准又尝试了4种算法，综合最好的是逻辑回归算法(Logistic Regression)，因其在准确率和召回率上都超过了GaussianNB，比较均衡。期间，还尝试了支持向量机(SVM)，随机森林(Random Forest), K均值(K Means)。其结果如下表所示：</p>
+
+<table>
+<thead>
+<tr>
+  <th align="center">Algorithm</th>
+  <th align="center">Precision</th>
+  <th align="center">Recall</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="center">GaussianNB</td>
+  <td align="center">0.341673420536</td>
+  <td align="center">0.357945815296</td>
+</tr>
+<tr>
+  <td align="center">Logistic Regression</td>
+  <td align="center">0.362552943135</td>
+  <td align="center">0.369802272727</td>
+</tr>
+<tr>
+  <td align="center">K-Means</td>
+  <td align="center">0.307277095072</td>
+  <td align="center">0.360421031746</td>
+</tr>
+<tr>
+  <td align="center">SVM</td>
+  <td align="center">0.518227252404</td>
+  <td align="center">0.225785678211</td>
+</tr>
+<tr>
+  <td align="center">Random Forest</td>
+  <td align="center">0.35091547619</td>
+  <td align="center">0.165298484848</td>
+</tr>
+</tbody></table>
+
+
+<p><strong>Q4: <em>4.   调整算法的参数是什么意思，如果你不这样做会发生什么？你是如何调整特定算法的参数的？（一些算法没有需要调整的参数 – 如果你选择的算法是这种情况，指明并简要解释对于你最终未选择的模型或需要参数调整的不同模型，例如决策树分类器，你会怎么做）。【相关标准项：“调整算法”】</em></strong> </p>
+
+<p>调整参数就是在模型训练时调整各个算法的参数使得算法更加适合所研究的问题。如果参数调整的不好会使整个算法效果差，同时也会使本应得到良好效果的算法无效化。所以在我尝试的几种机器学习算法中，尽可能的调整参数来达到更好的效果。其中<code>GaussianNB</code>分类并不需要调整参数，仅需要选择好特征值就可以来预测分类结果，也被我当做基准参考。 <br>
+如下是我使用的几种方法的参数： <br>
+Logistic regression: </p>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="hljs nix">LogisticRegression(<span class="hljs-attr">C=1e-08,</span> <span class="hljs-attr">class_weight=None,</span> <span class="hljs-attr">dual=False,</span> <span class="hljs-attr">fit_intercept=True,</span><br>          <span class="hljs-attr">intercept_scaling=1,</span> <span class="hljs-attr">max_iter=100,</span> <span class="hljs-attr">multi_class='ovr',</span> <span class="hljs-attr">n_jobs=1,</span><br>          <span class="hljs-attr">penalty='l2',</span> <span class="hljs-attr">random_state=42,</span> <span class="hljs-attr">solver='liblinear',</span> <span class="hljs-attr">tol=0.001,</span><br>          <span class="hljs-attr">verbose=0,</span> <span class="hljs-attr">warm_start=False))])</span><br><br></code></pre>
+
+<p>K-means clustering: </p>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="hljs nix">KMeans(<span class="hljs-attr">copy_x=True,</span> <span class="hljs-attr">init='k-means++',</span> <span class="hljs-attr">max_iter=300,</span> <span class="hljs-attr">n_clusters=2,</span> <span class="hljs-attr">n_init=10,</span><br>    <span class="hljs-attr">n_jobs=1,</span> <span class="hljs-attr">precompute_distances='auto',</span> <span class="hljs-attr">random_state=None,</span> <span class="hljs-attr">tol=0.001,</span><br>    <span class="hljs-attr">verbose=0)</span><br></code></pre>
+
+<p>SVM:</p>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="hljs nix">SVC(<span class="hljs-attr">C=1000,</span> <span class="hljs-attr">cache_size=200,</span> <span class="hljs-attr">class_weight='auto',</span> <span class="hljs-attr">coef0=0.0,</span><br>  <span class="hljs-attr">decision_function_shape=None,</span> <span class="hljs-attr">degree=3,</span> <span class="hljs-attr">gamma=0.0001,</span> <span class="hljs-attr">kernel='rbf',</span><br>  <span class="hljs-attr">max_iter=-1,</span> <span class="hljs-attr">probability=False,</span> <span class="hljs-attr">random_state=42,</span> <span class="hljs-attr">shrinking=True,</span><br>  <span class="hljs-attr">tol=0.001,</span> <span class="hljs-attr">verbose=False)</span><br></code></pre>
+
+<p>Random Forest:</p>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="hljs nix">RandomForestClassifier(<span class="hljs-attr">bootstrap=True,</span> <span class="hljs-attr">class_weight=None,</span> <span class="hljs-attr">criterion='gini',</span><br>            <span class="hljs-attr">max_depth=5,</span> <span class="hljs-attr">max_features='sqrt',</span> <span class="hljs-attr">max_leaf_nodes=None,</span><br>            <span class="hljs-attr">min_samples_leaf=1,</span> <span class="hljs-attr">min_samples_split=2,</span><br>            <span class="hljs-attr">min_weight_fraction_leaf=0.0,</span> <span class="hljs-attr">n_estimators=10,</span> <span class="hljs-attr">n_jobs=1,</span><br>            <span class="hljs-attr">oob_score=False,</span> <span class="hljs-attr">random_state=42,</span> <span class="hljs-attr">verbose=0,</span> <span class="hljs-attr">warm_start=False)</span><br></code></pre>
+
+<p><strong>Q5:<em>5.    什么是验证，未正确执行情况下的典型错误是什么？你是如何验证你的分析的？【相关标准项：“验证策略”】</em></strong></p>
+
+<p>验证是指使用一系列的评价指标来评估所选算法是否适应所处理问题。如果未进行合理的数据验证，会出现模型在训练集过拟合的情况，从而导致在测试集效果不佳的情况。机器学习中一个重要的话题便是模型的泛化能力，泛化能力强的模型才是好模型，对于训练好的模型，若在训练集表现差，不必说在测试集表现同样会很差，这可能是欠拟合导致；若模型在训练集表现非常好，却在测试集上差强人意，则这便是过拟合导致的，过拟合与欠拟合也可以用 Bias 与 Variance 的角度来解释，欠拟合会导致高 Bias ，过拟合会导致高 Variance ，所以模型需要在 Bias 与 Variance 之间做出一个权衡。</p>
+
+<p><strong><em>解决欠拟合的方法</em></strong>：</p>
+
+<ul><li>增加新特征，可以考虑加入进特征组合、高次特征，来增大假设空间;</li>
+<li>尝试非线性模型，比如核SVM 、决策树、DNN等模型;</li>
+<li>如果有正则项可以较小正则项参数 λ.</li>
+<li>Boosting ,Boosting 往往会有较小的 Bias，比如 Gradient Boosting 等.</li>
+</ul>
+
+<p><strong><em>解决过拟合的方法</em></strong>：</p>
+
+<ul><li>交叉检验，通过交叉检验得到较优的模型参数；</li>
+<li>特征选择，减少特征数或使用较少的特征组合，对于按区间离散化的特征，增大划分的区间。</li>
+<li>正则化，常用的有 L1、L2 正则。而且 L1 正则还可以自动进行特征选择。</li>
+<li>如果有正则项则可以考虑增大正则项参数 λ.</li>
+<li>增加训练数据可以有限的避免过拟合.</li>
+<li>Bagging ,将多个弱学习器Bagging 一下效果会好很多，比如随机森林等；</li>
+</ul>
+
+<p>本项目采用<code>sklearn</code>提供的<code>cross_validation</code>来进行交叉验证。</p>
+
+<p><strong>Q6:<em>6.    给出至少 2 个评估度量并说明每个的平均性能。解释对用简单的语言表明算法性能的度量的解读。【相关标准项：“评估度量的使用”】</em></strong></p>
+
+<p>本项目采用精确率&amp;召回率进行评估。综合考虑发现获得最好效果的分类方法为逻辑回归(<code>precision: 0.363</code> &amp; <code>recall: 0.370</code>) , 由于逻辑回归被广泛地使用在文本分类中，而本项目也涉及到邮件信息的识别，所以对于这样的结果还是比较可信的。</p>
+
+<ul><li>精确率(Precision）是指在所有系统判定的“真”的样本中，确实是真的的占比，就是TP/(TP+FP)。</li>
+<li>召回率（Recall）是指在所有确实为真的样本中，被判为的“真”的占比，就是TP/(TP+FN)。</li>
+</ul>
+
+<p>其中，将原本是真的判为真，就是TP（True Positive），原本真的判为假，就是FN（False Negative），原本假的判为真，就是FP（False Positive），原本假的判为假，就是TN（True Negative）。 <br>
+本项目的精确率为0.363，表示逻辑回归预测的100个POI中，有36个为真的POI，而剩余的64个并非POI；召回率为0.370，表示该模型可以在所有的POI中找出37%。</p>
+
+
+
+<h3 id="references">References:</h3>
+
+<ul><li><a href="https://www.udacity.com/course/viewer#!/c-ud120-nd" target="_blank">Introduction to Machine Learning (Udacity)</a></li>
+<li><a href="http://www.cnblogs.com/ooon/p/5715918.html" target="_blank">交叉验证</a></li>
+<li><a href="http://scikit-learn.org/stable/documentation.html" target="_blank">scikit-learn Documentation</a></li>
+<li><a href="https://www.zhihu.com/question/30643044/answer/161955532" target="_blank">精确率&amp;召回率</a></li>
+</ul>
+
+
+
+<h3 id="files">Files</h3>
+
+<ul><li><code>tools/</code>: helper tools and functions</li>
+<li><code>final_project/poi_id.py</code>: main submission file - POI identifier</li>
+<li><code>final_project/tester.py</code>: Udacity-provided file, produce test result for submission</li>
+</ul></div></body></html>
