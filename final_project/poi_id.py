@@ -178,11 +178,11 @@ k_clf = KMeans(n_clusters=2, tol=0.001)
 
 ###4.3 Support Vector Machine Classifier
 from sklearn.svm import SVC
-s_clf = SVC(kernel='rbf', C=1000,gamma = 0.0001,random_state = 42, class_weight = 'auto')
+s_clf = SVC(kernel='rbf', C=1000, gamma=0.0001, random_state=42, class_weight='auto')
 
 ###4.4 Random Forest
 from sklearn.ensemble import RandomForestClassifier
-rf_clf = RandomForestClassifier(max_depth = 5,max_features = 'sqrt',n_estimators = 10, random_state = 42)
+rf_clf = RandomForestClassifier(max_depth=5, max_features='sqrt', n_estimators=10, random_state=42)
 
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
