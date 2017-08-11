@@ -130,7 +130,10 @@ my_feature_list = features_list + ['fraction_from_poi', 'fraction_to_poi']
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
-best_features = get_k_best(my_dataset, my_feature_list, 10)
+from sklearn import cross_validation
+features_train, features_test, labels_train, labels_test = cross_validation.train_test_split(my_dataset, my_feature_list, test_size=0.1, random_state=42)
+
+best_features = get_k_best(features_train, features_test, 10)
 
 ### get the 10 best features are ['exercised_stock_options' 'total_stock_value' 'bonus' 'salary'
 ### 'deferred_income' 'long_term_incentive' 'restricted_stock'
@@ -193,7 +196,7 @@ rf_clf = RandomForestClassifier(max_depth=5, max_features='sqrt', n_estimators=1
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 ###5.1 evaluate function
 from sklearn.cross_validation import StratifiedShuffleSplit
-from sklearn import cross_validation
+
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from numpy import mean
 
