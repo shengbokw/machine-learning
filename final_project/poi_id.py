@@ -244,4 +244,4 @@ clf = l_clf
 
 pickle.dump(clf, open("./my_classifier.pkl", "w"))
 pickle.dump(my_dataset, open("./my_dataset.pkl", "w"))
-pickle.dump(my_feature_list, open("./my_feature_list.pkl", "w"))
+pickle.dump(final_feature_list, open("./my_feature_list.pkl", "w"))
